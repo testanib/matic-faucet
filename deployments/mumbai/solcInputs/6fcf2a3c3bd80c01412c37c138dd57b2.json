@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/MaticFaucet.sol": {
+      "content": "//SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.0;\r\n\r\ncontract MaticFaucet {\r\n\t\r\n    //state variable to keep track of owner and amount of MATIC to dispense\r\n    address public owner;\r\n    uint public amountAllowed = 10000000000000000;\r\n    uint public maxAmount = 50000000000000000;\r\n    bool public paused = false;\r\n    uint public timeOut = 60;\r\n    uint private transferGas = 21000;\r\n    uint private stipend = 9700;\r\n\r\n\r\n    //mapping to keep track of requested tokens\r\n    mapping(address => uint) public lockTime;\r\n\r\n    //constructor to set the owner\r\n\tconstructor() payable {\r\n\t\towner = msg.sender;\r\n\t}\r\n\r\n    //function modifier\r\n    modifier onlyOwner {\r\n        require(msg.sender == owner, \"Only owner can call this function.\");\r\n        _; \r\n    }\r\n\r\n    //modifier to check if the contract is paused\r\n    modifier checkPaused {\r\n        require(!paused, \"Faucet is paused.\");\r\n        _;\r\n    }\r\n\r\n    //modifier to check if the caller is a contract\r\n    modifier callerIsUser {\r\n        require(tx.origin == msg.sender, \"The caller is another contract\");\r\n        _;\r\n    }\r\n\r\n    modifier refundGasCost{\r\n        uint remainingGasStart = gasleft();\r\n        _;\r\n\r\n        uint remainingGasEnd = gasleft();\r\n        uint usedGas = remainingGasStart - remainingGasEnd;\r\n        // Add intrinsic gas and transfer gas. Need to account for gas stipend as well.\r\n        usedGas += transferGas + stipend;\r\n        // Possibly need to check max gasprice and usedGas here to limit possibility for abuse.\r\n        uint gasCost = usedGas * tx.gasprice;\r\n        // Refund gas cost\r\n        payable(msg.sender).transfer(gasCost); \r\n    }\r\n\r\n    //function to change the owner.  Only the owner of the contract can call this function\r\n    function setOwner(address newOwner) public onlyOwner {\r\n        owner = newOwner;\r\n    }\r\n\r\n    //function to set the amount allowable to be claimed. Only the owner can call this function\r\n    function setAmountallowed(uint newAmountAllowed) public onlyOwner {\r\n        amountAllowed = newAmountAllowed;\r\n    }\r\n\r\n    //function to set the time out for the tokens. Only the owner can call this function\r\n    function setTimeOut(uint newTimeOut) public onlyOwner {\r\n        timeOut = newTimeOut;\r\n    }\r\n\r\n    //function to set the time out for the tokens. Only the owner can call this function\r\n    function setStipend(uint newStipend) public onlyOwner {\r\n        stipend = newStipend;\r\n    }\r\n\r\n    //function to set the time out for the tokens. Only the owner can call this function\r\n    function setTransferGas(uint newTransferGas) public onlyOwner {\r\n        transferGas = newTransferGas;\r\n    }\r\n\r\n    //function to donate funds to the faucet contract\r\n\tfunction donateToFaucet() public payable {\r\n\t}\r\n\r\n    //function to send tokens from faucet to an address\r\n    function requestTokens() public checkPaused callerIsUser refundGasCost {\r\n        require(block.timestamp > lockTime[msg.sender], \"lock time has not expired\");\r\n        require(address(this).balance > amountAllowed, \"Not enough funds in the faucet\");\r\n        require(address(msg.sender).balance < maxAmount, \"You have too much MATIC\");\r\n        payable(msg.sender).transfer(amountAllowed);        \r\n        lockTime[msg.sender] = block.timestamp + timeOut;\r\n    }\r\n}"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
