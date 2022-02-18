@@ -2,6 +2,8 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-deploy");
 require("@nomiclabs/hardhat-etherscan");
+require('solidity-coverage')
+require("hardhat-gas-reporter");
 
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   const accounts = await hre.ethers.getSigners();
@@ -54,7 +56,7 @@ module.exports = {
     }
   },
   solidity: {
-    version: "0.8.0",
+    version: "0.8.7",
     settings: {
       optimizer: {
         enabled: true,
